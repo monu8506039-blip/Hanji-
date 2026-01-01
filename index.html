@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Happy New Year 2026</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+html,body{
+  margin:0; padding:0;
+  height:100%; overflow:hidden;
+  background:#000;
+  font-family:'Poppins',sans-serif;
+}
+canvas{position:absolute; inset:0}
+
+#arrow{
+  position:absolute;
+  bottom:140px;
+  width:100%;
+  text-align:center;
+  font-size:64px;
+  color:#fff;
+  animation:bounce 1s infinite;
+}
+@keyframes bounce{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-25px)}
+}
+
+#city{
+  position:absolute;
+  bottom:0;
+  width:100%;
+  height:28%;
+  background:linear-gradient(#000,#050505);
+  clip-path:polygon(
+    0 100%,0 55%,6% 65%,12% 50%,18% 70%,24% 45%,
+    30% 65%,36% 40%,42% 60%,48% 35%,54% 55%,
+    60% 40%,66% 65%,72% 45%,78% 60%,84% 50%,
+    90% 65%,96% 55%,100% 60%,100% 100%
+  );
+}
+
+#msg{
+  position:absolute;
+  inset:0;
+  display:none;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+}
+#msg h1{
+  font-size:82px;
+  color:#ffdf00;
+  text-shadow:0 0 40px gold,0 0 80px orange;
+  animation:pulse 1.8s infinite alternate;
+}
+#msg p{
+  font-size:22px;
+  color:#fff;
+  max-width:85%;
+  opacity:.9;
+}
+@keyframes pulse{
+  from{transform:scale(1)}
+  to{transform:scale(1.22)}
+}
+
+#musicBtn{
+  position:absolute;
+  top:15px; right:15px;
+  background:#ffdf00;
+  border:none;
+  padding:10px 18px;
+  border-radius:30px;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<button id="musicBtn">🎵 Play</button>
+<audio id="music" loop>
+<source src="https://cdn.pixabay.com/audio/2023/10/09/audio_5b7b09db93.mp3">
+</audio>
+
+<canvas id="cv"></canvas>
+<div id="city"></div>
+<div id="arrow">⬆️ Swipe Up</div>
+
+<div id="msg">
+  <h1>🔥 HAPPY NEW YEAR 2026 🔥</h1>
+  <p>
+    Naya saal, nayi shuruaat ✨<br>
+    Khushiyan, pyar aur success tumhare saath rahe ❤️
+  </p>
+</div>
+
+<script>
+const c=document.getElementById("cv"),ctx=c.getContext("2d");
+c.width=innerWidth;c.height=innerHeight;
+
+let stars=[], rockets=[], sparks=[], hearts=[];
+let started=false, shake=0;
+
+/* Stars (depth) */
+for(let i=0;i<350;i++){
+  stars.push({
+    x:Math.random()*c.width,
+    y:Math.random()*c.height,
+    z:Math.random()*2+0.5
+  });
+}
+
+/* Rocket */
+function Rocket(){
+  this.x=Math.random()*c.width;
+  this.y=c.height;
+  this.vy=-(9+Math.random()*4);
+}
+Rocket.prototype.update=function(){
+  this.y+=this.vy;
+  if(this.y<c.height*0.35){
+    explode(this.x,this.y);
+    shake=20;
+    this.dead=true;
+  }
+}
+Rocket.prototype.draw=function(){
+  ctx.fillStyle="white";
+  ctx.fillRect(this.x,this.y,2,16);
+}
+
+/* Explosion */
+function explode(x,y){
+  for(let i=0;i<260;i++){
+    sparks.push({
+      x,y,
+      vx:(Math.random()-0.5)*9,
+      vy:(Math.random()-0.5)*9,
+      life:160,
+      col:`hsl(${Math.random()*360},100%,60%)`
+    });
+  }
+  for(let i=0;i<25;i++){
+    hearts.push({
+      x,y,
+      vx:(Math.random()-0.5)*3,
+      vy:(Math.random()-0.5)*3,
+      life:200
+    });
+  }
+}
+
+/* Animation */
+function loop(){
+  ctx.save();
+  if(shake>0){
+    ctx.translate(
+      (Math.random()-0.5)*shake,
+      (Math.random()-0.5)*shake
+    );
+    shake*=0.9;
+  }
+
+  ctx.fillStyle="rgba(0,0,0,0.35)";
+  ctx.fillRect(0,0,c.width,c.height);
+
+  stars.forEach(s=>{
+    s.y+=0.4*s.z;
+    if(s.y>c.height) s.y=0;
+    ctx.fillStyle="white";
+    ctx.fillRect(s.x,s.y,s.z,s.z);
+  });
+
+  rockets.forEach(r=>{r.update();r.draw();});
+  rockets=rockets.filter(r=>!r.dead);
+
+  sparks.forEach((p,i)=>{
+    p.x+=p.vx;p.y+=p.vy;p.life--;
+    ctx.fillStyle=p.col;
+    ctx.fillRect(p.x,p.y,3,3);
+    if(p.life<=0) sparks.splice(i,1);
+  });
+
+  hearts.forEach((h,i)=>{
+    h.x+=h.vx;h.y+=h.vy;h.life--;
+    ctx.fillStyle="red";
+    ctx.beginPath();
+    ctx.arc(h.x,h.y,5,0,Math.PI*2);
+    ctx.fill();
+    if(h.life<=0) hearts.splice(i,1);
+  });
+
+  ctx.restore();
+  requestAnimationFrame(loop);
+}
+loop();
+
+/* Start */
+function start(){
+  if(started) return;
+  started=true;
+  arrow.style.display="none";
+  let iv=setInterval(()=>rockets.push(new Rocket()),550);
+  setTimeout(()=>{
+    clearInterval(iv);
+    msg.style.display="flex";
+  },5500);
+}
+
+/* Swipe & Scroll */
+let sy=0;
+addEventListener("touchstart",e=>sy=e.touches[0].clientY);
+addEventListener("touchend",e=>{
+  if(sy-e.changedTouches[0].clientY>80) start();
+});
+addEventListener("wheel",start);
+
+/* Music */
+musicBtn.onclick=()=>{
+  if(music.paused){
+    music.play();
+    musicBtn.innerText="⏸ Pause";
+  }else{
+    music.pause();
+    musicBtn.innerText="🎵 Play";
+  }
+};
+</script>
+
+</body>
+</html>
